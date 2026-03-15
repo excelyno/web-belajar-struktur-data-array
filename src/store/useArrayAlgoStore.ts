@@ -10,30 +10,29 @@ export interface AnimationFrame {
   logMessage: string;                        // Pesan di console bawah terminal
 }
 
-interface ArrayAlgoState {
-  // State Data
+export interface ArrayAlgoState {
+  // --- STATE ---
   baseArray: number[];
   frames: AnimationFrame[];
   currentFrameIndex: number;
-  
-  // State Playback & Info
   isPlaying: boolean;
   speedMs: number;
   currentAlgo: string;
   complexity: string;
 
-  // Actions
-  setBaseArray: (arr: number[]) => void;
+  // --- CONTROLS ---
+  setSpeed: (speed: number) => void;
   play: () => void;
   pause: () => void;
   nextFrame: () => void;
   prevFrame: () => void;
-  setSpeed: (speed: number) => void;
-  resetAnimation: () => void;
 
-  // Algorithm Generators
+  // --- ALGORITHM GENERATORS ---
   generateTraversal: () => void;
   generateLinearSearch: (target: number) => void;
+  
+  // Ini yang dicari sama Vercel bang! 👇
+  generateInsertion: (index: number, value: number) => void;
   generateDeletion: (index: number) => void;
   generateAccess: (index: number) => void;
   generateUpdate: (index: number, newValue: number) => void;
