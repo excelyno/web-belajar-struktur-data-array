@@ -51,7 +51,9 @@ export const useRAMStore = create<RAMState>((set, get) => ({
 
   dealokasiArray: () => set((state) => {
     const newMemory = state.memory.map(block => 
-      block.status === 'array' || block.status === 'error' ? { ...block, status: 'free', label: undefined, value: null } : block
+      block.status === 'array' || block.status === 'error' 
+        ? ({ ...block, status: 'free', label: undefined, value: null } as MemoryBlock) // 👈 PERBAIKAN DI SINI
+        : block
     );
     return { memory: newMemory, baseAddress: null, arraySize: 0, isAllocated: false, errorMessage: null, highlightedAddress: null };
   }),
@@ -66,22 +68,30 @@ export const useRAMStore = create<RAMState>((set, get) => ({
       return false;
     }
 
+    // Pertama, cari lahan kosong dulu
     for (let i = 0; i < memory.length; i++) {
       if (memory[i].status === 'free') {
         if (consecutiveFree === 0) startIndex = i;
         consecutiveFree++;
         
         if (consecutiveFree === size) {
-          const newMemory = [...memory];
-          for (let j = startIndex; j < startIndex + size; j++) {
-            newMemory[j] = { ...newMemory[j], status: 'array', label: `arr[${j - startIndex}]` };
-          }
-          set({ memory: newMemory, baseAddress: startIndex, arraySize: size, isAllocated: true, errorMessage: null });
-          return true;
+          break; // Ketemu lahan, langsung keluar loop pencarian
         }
       } else {
         consecutiveFree = 0; 
       }
+    }
+    
+    // Kedua, kalau ketemu, baru kita ubah memory state-nya
+    if (consecutiveFree === size && startIndex !== -1) {
+       set((state) => {
+         const newMemory = [...state.memory];
+         for (let j = startIndex; j < startIndex + size; j++) {
+           newMemory[j] = { ...newMemory[j], status: 'array', label: `arr[${j - startIndex}]` };
+         }
+         return { memory: newMemory, baseAddress: startIndex, arraySize: size, isAllocated: true, errorMessage: null };
+       });
+       return true;
     }
     
     set({ errorMessage: `Memory Error: Tidak ada ${size} blok bersebelahan yang kosong.` });
@@ -121,6 +131,7 @@ export const useRAMStore = create<RAMState>((set, get) => ({
     });
     return isCrash;
   },
+  
   resizeArray: (newSize) => {
     const { memory, baseAddress, arraySize } = get();
     if (baseAddress === null) return false;
@@ -140,37 +151,39 @@ export const useRAMStore = create<RAMState>((set, get) => ({
       }
     }
 
-    if (consecutiveFree === newSize) {
-      const newMemory = [...memory];
-      const oldData = [];
+    if (consecutiveFree === newSize && newStartIndex !== -1) {
+      set((state) => {
+        const newMemory = [...state.memory];
+        const oldData: (string | null)[] = []; // 👈 PERBAIKAN TIPE DATA
 
-      // 2. COPY DATA LAMA (Proses O(n) yang bikin lemot) & Hancurkan rumah lama
-      for (let i = 0; i < arraySize; i++) {
-        oldData.push(newMemory[baseAddress + i].value); // Ambil barangnya
-        
-        // Bersihkan blok memori lama
-        newMemory[baseAddress + i] = { 
-          ...newMemory[baseAddress + i], 
-          status: 'free', label: undefined, value: null 
+        // 2. COPY DATA LAMA (Proses O(n) yang bikin lemot) & Hancurkan rumah lama
+        for (let i = 0; i < arraySize; i++) {
+          oldData.push(newMemory[baseAddress + i].value as string | null); // Ambil barangnya
+          
+          // Bersihkan blok memori lama
+          newMemory[baseAddress + i] = { 
+            ...newMemory[baseAddress + i], 
+            status: 'free', label: undefined, value: null 
+          } as MemoryBlock; // 👈 PERBAIKAN DI SINI
+        }
+
+        // 3. Pindah ke rumah baru dan masukkan data lama
+        for (let j = 0; j < newSize; j++) {
+          const val = j < oldData.length ? oldData[j] : null;
+          newMemory[newStartIndex + j] = { 
+            ...newMemory[newStartIndex + j], 
+            status: 'array', 
+            label: `arr[${j}]`,
+            value: val 
+          };
+        }
+
+        return { 
+          memory: newMemory, 
+          baseAddress: newStartIndex, 
+          arraySize: newSize,
+          errorMessage: `✅ SUKSES: Pindah dari ${toHex(baseAddress)} ke ${toHex(newStartIndex)}. Proses mindahin ${arraySize} elemen butuh waktu O(n)!`
         };
-      }
-
-      // 3. Pindah ke rumah baru dan masukkan data lama
-      for (let j = 0; j < newSize; j++) {
-        const val = j < oldData.length ? oldData[j] : null;
-        newMemory[newStartIndex + j] = { 
-          ...newMemory[newStartIndex + j], 
-          status: 'array', 
-          label: `arr[${j}]`,
-          value: val 
-        };
-      }
-
-      set({ 
-        memory: newMemory, 
-        baseAddress: newStartIndex, 
-        arraySize: newSize,
-        errorMessage: `✅ SUKSES: Pindah dari ${toHex(baseAddress)} ke ${toHex(newStartIndex)}. Proses mindahin ${arraySize} elemen butuh waktu O(n)!`
       });
       return true;
     } else {
