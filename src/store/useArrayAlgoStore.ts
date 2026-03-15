@@ -21,6 +21,8 @@ export interface ArrayAlgoState {
   complexity: string;
 
   // --- CONTROLS ---
+  setBaseArray: (arr: number[]) => void; // 👈 TAMBAHKAN INI
+  resetAnimation: () => void;            // 👈 TAMBAHKAN INI
   setSpeed: (speed: number) => void;
   play: () => void;
   pause: () => void;
@@ -30,8 +32,6 @@ export interface ArrayAlgoState {
   // --- ALGORITHM GENERATORS ---
   generateTraversal: () => void;
   generateLinearSearch: (target: number) => void;
-  
-  // Ini yang dicari sama Vercel bang! 👇
   generateInsertion: (index: number, value: number) => void;
   generateDeletion: (index: number) => void;
   generateAccess: (index: number) => void;
