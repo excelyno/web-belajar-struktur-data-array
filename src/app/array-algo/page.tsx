@@ -49,6 +49,11 @@ const ALGO_CODES: Record<string, string[]> = {
     "    arr[index] = new_value # Timpa nilai secara instan",
     "    return"
   ],
+  'Append': [
+    "def append(arr, value):",
+    "    arr.append(value)",
+    "    return"
+  ],
 };
 
 export default function ArrayAlgoPage() {
@@ -62,6 +67,7 @@ export default function ArrayAlgoPage() {
   const [accessIndex, setAccessIndex] = useState("2");
   const [updateIndex, setUpdateIndex] = useState("2");
   const [updateValue, setUpdateValue] = useState("999");
+  const [appendValue, setAppendValue] = useState('10');
 
   // Pointer ke frame yang sedang aktif
   const currentFrame = store.frames[store.currentFrameIndex] || null;
@@ -112,9 +118,17 @@ export default function ArrayAlgoPage() {
     setTimeout(() => store.play(), 100);
   };
 
+    // HANDLER APPEND
+    const handleRunAppend = () => {
+        if (appendValue === '') return;
+        store.generateAppend(Number(appendValue));
+        setTimeout(() => store.play(), 100);
+        setAppendValue(''); // Opsional: kosongkan input setelah diklik
+    };
+    // HANDLER SEARCH
   const handleRunSearch = () => {
     store.generateLinearSearch(Number(searchValue));
-    setTimeout(() => store.play(), 100);
+    setTimeout(() => store.play(), 10);
   };
 
   // --- HELPER UNTUK WARNA KOTAK ARRAY ---
@@ -307,6 +321,28 @@ export default function ArrayAlgoPage() {
                 </div>
               </div>
             </div>
+            
+            {/* Card Append */}
+              <div className="bg-[#161B22] p-3 rounded border border-slate-800 hover:border-slate-600 transition-colors">
+                <div className="text-sm text-slate-300 mb-2 font-semibold">Append <span className="italic font-serif text-slate-400">O(1)</span></div>
+                <div className="flex gap-2">
+                  <input 
+                    type="number" 
+                    value={appendValue} 
+                    onChange={(e) => setAppendValue(e.target.value)} 
+                    className="w-10 bg-[#0B0D12] border border-slate-700 rounded text-center text-xs text-cyan-400 outline-none focus:border-cyan-500" 
+                    title="Value" 
+                    placeholder="Val" 
+                  />
+                  <button 
+                    onClick={handleRunAppend} 
+                    className="flex-1 py-1.5 bg-cyan-900/20 hover:bg-cyan-900/40 text-cyan-400 text-xs rounded border border-cyan-900/30 transition-colors"
+                  >
+                    Append
+                  </button>
+                </div>
+              </div>
+
             {/* PLAYBACK CONTROLS */}
             <div className="mt-auto bg-[#161B22] p-3 rounded border border-slate-800 flex items-center justify-between">
               

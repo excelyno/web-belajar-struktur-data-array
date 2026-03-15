@@ -36,6 +36,7 @@ export interface ArrayAlgoState {
   generateDeletion: (index: number) => void;
   generateAccess: (index: number) => void;
   generateUpdate: (index: number, newValue: number) => void;
+  generateAppend: (value: number) => void;
 }
 
 const DEFAULT_ARRAY = [10, 20, 30, 40, 50];
@@ -328,6 +329,46 @@ export const useArrayAlgoStore = create<ArrayAlgoState>((set, get) => ({
     });
 
     set({ baseArray: currentArr, frames, currentFrameIndex: 0, isPlaying: false, currentAlgo: 'Update', complexity: 'O(1)' });
+  },
+  generateAppend: (value: number) => {
+    const { baseArray } = get();
+    const frames: AnimationFrame[] = [];
+    
+    // Bikin copy array dengan tipe data yang mengizinkan null
+    const currentArr: (number | string | null)[] = [...baseArray];
+
+    // Frame 0: Persiapan
+    frames.push({
+      arraySnapshot: [...currentArr], activeLine: 1, pointers: {}, highlightIndices: [],
+      status: 'default', logMessage: `Memulai Append: Menambahkan angka ${value} ke ujung akhir array...`
+    });
+
+    // Frame 1: Alokasi slot baru di belakang
+    const newIndex = currentArr.length;
+    currentArr.push(null); // Bikin lubang di akhir
+    
+    frames.push({
+      arraySnapshot: [...currentArr], activeLine: 2, pointers: { target: newIndex }, highlightIndices: [newIndex],
+      status: 'default', logMessage: `Mengalokasikan slot memori kosong di indeks ke-${newIndex}...`
+    });
+
+    // Frame 2: Langsung masukkan nilai tanpa perlu geser-geser!
+    currentArr[newIndex] = value;
+
+    frames.push({
+      arraySnapshot: [...currentArr], activeLine: 3, pointers: { target: newIndex }, highlightIndices: [newIndex],
+      status: 'success', logMessage: `⚡ Instan O(1)! Angka ${value} berhasil dimasukkan tanpa menggeser elemen lain.`
+    });
+
+    // Update state
+    set({ 
+      baseArray: currentArr as number[], 
+      frames, 
+      currentFrameIndex: 0, 
+      isPlaying: false, 
+      currentAlgo: 'Append', 
+      complexity: 'O(1)' 
+    });
   },
 }));
 
